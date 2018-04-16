@@ -1,0 +1,70 @@
+*.py[cod]
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.log
+*.egg-info
+*.sublime-workspace
+run.sublime-workspace
+bfl.sublime-project
+src/pip-*.txt
+dist
+build
+eggs
+parts
+var
+sdist
+develop-eggs
+.installed.cfg
+lib64
+# Vim Temporary Files
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+.netrwhist
+*~
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+/.settings/org.eclipse.core.resources.prefs
+*~
+project/media/temp/*
+
+# Virtualenv
+venv/
+env/
+temp/
+*.apk
+# pycharm
+.idea*
+.idea/
+
+# vim
+*.swp
+*.pyc
+*.zip
+*.save
+*.old
+*.sql
+*.orig
+
+
+tmp/
+done/
+watch/
