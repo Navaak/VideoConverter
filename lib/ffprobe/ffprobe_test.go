@@ -1,10 +1,14 @@
 package ffprobe
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestGetDetail(t *testing.T) {
-	_, err := GetDetail("/home/ehsan/Downloads/Alex.mp4")
+	detail, err := GetDetail("/home/ehsan/Downloads/Alex.mp4")
 	if err != nil {
 		t.Error(err)
 	}
+	fmt.Println(detail)
 }

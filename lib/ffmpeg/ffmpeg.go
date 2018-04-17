@@ -6,8 +6,11 @@ import (
 	"io"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"navaak/convertor/lib/ffprobe"
 )
@@ -47,20 +50,21 @@ var (
 )
 
 type Video struct {
-	src      string
-	destDir  string
-	scales   []string
-	details  FileDetail
-	progress chan float32
-	worker   int
-	exports  []Export
+	src            string
+	destDir        string
+	scales         []string
+	details        FileDetail
+	worker         int
+	exports        []Export
+	sourceDuration time.Duration
 }
 
 type Export struct {
-	dest       string
-	resolution ffprobe.Resolution
-	err        error
-	progress   chan float32
+	dest           string
+	resolution     ffprobe.Resolution
+	err            error
+	progress       float32
+	sourceDuration time.Duration
 }
 
 func NewVideo(src, destDir string, scales ...string) (Video, error) {
@@ -71,6 +75,7 @@ func NewVideo(src, destDir string, scales ...string) (Video, error) {
 	v := new(Video)
 	v.src = src
 	v.destDir = destDir
+	v.sourceDuration = strDurationToTime(v.details.Format.Duration)
 	for _, scale := range scales {
 		if _, err := v.newExp(scale); err != nil {
 			return err
@@ -79,8 +84,16 @@ func NewVideo(src, destDir string, scales ...string) (Video, error) {
 	return v, nil
 }
 
-func (v *Video) Progress() int {
-	return 10
+func (v *Video) Progress() chan float32 {
+	p := make(chan float32)
+	go v.calculateProgress(p)
+	return p
+}
+
+func (v *Video) calculateProgress(p chan float32) {
+	for {
+		time.Sleep(time.Second)
+	}
 }
 
 func (v *Video) JobsCount() int {
@@ -122,6 +135,7 @@ func (v *Video) newExp(scale string) (*Export, error) {
 	e.dest = dest
 	e.resolution = resolution
 	v.exports = append(v.exports, *e)
+	e.sourceDuration = v.sourceDuration
 	return e, nil
 }
 
@@ -136,9 +150,9 @@ func (v *Video) exec(e Export, job sync.WaitGroup) error {
 		return err
 	}
 	cmd.Start()
-
+	e.progress = make(chan float)
 	go func() {
-		readout(stdout)
+		e.readout(stdout)
 	}()
 
 	if err := cmd.Wait(); err != nil {
@@ -159,7 +173,7 @@ func (v *Video) makeFilepath(scale string) (string, error) {
 	return filepath.Join(v.destDir, filepath), nil
 }
 
-func readout(r io.Reader) {
+func (e *Export) readout(r io.Reader) {
 	buf := make([]byte, 1024, 1024)
 	counter := 0
 	for {
@@ -170,7 +184,8 @@ func readout(r io.Reader) {
 		}
 		if n > 0 {
 			d := buf[:n]
-			println(string(d), "-------", counter)
+			current := parseDurationFromReader(string(d))
+			e.progress = getProgress(current, e.sourceDuration)
 		}
 		if err != nil {
 			if err == io.EOF {
@@ -179,4 +194,28 @@ func readout(r io.Reader) {
 			return
 		}
 	}
+}
+
+func getProgress(current, total time.Duration) float32 {
+	return 20
+}
+
+func parseDurationFromReader(s string) time.Duration {
+	re := regexp.MustCompile("time=([0-9]+):([0-9]+):([0-9]+)")
+	submatches := re.FindAllStringSubmatch(s, -1)
+	if len(submatches) < 4 {
+		return time.Minute * 15
+	}
+	hour, _ := strconv.Atoi(submatches[1])
+	min, _ := strconv.Atoi(submatches[2])
+	sec, _ := strconv.Atoi(submatches[3])
+	return time.Duration(int(time.Hour)*hour) +
+		time.Duration(int(time.Minute)*hour) +
+		time.Duration(int(time.Second)*hour)
+
+}
+
+func strDurationToTime(s string) time.Duration {
+	n, _ := strconv.Atoi(s)
+	return time.Duration(int(time.Second) * n)
 }

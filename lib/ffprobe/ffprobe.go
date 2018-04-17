@@ -8,7 +8,7 @@ import (
 
 type Resolution struct {
 	Width  int `json:"width"`
-	height int `json:"height"`
+	Height int `json:"height"`
 }
 
 type Format struct {
@@ -19,7 +19,7 @@ type Format struct {
 }
 
 type FileDetail struct {
-	streams    []resolution `json:"streams"`
+	Streams    []Resolution `json:"streams"`
 	Format     Format       `json:"format"`
 	Resolution Resolution   `json:"-"`
 }
@@ -32,7 +32,6 @@ func GetDetail(path string) (*FileDetail, error) {
 		return nil, err
 	}
 	f := new(FileDetail)
-	println(string(out))
 	if err := json.Unmarshal(out, f); err != nil {
 		return nil, err
 	}
@@ -43,9 +42,9 @@ func GetDetail(path string) (*FileDetail, error) {
 }
 
 func (f *FileDetail) parse() error {
-	if len(f.streams) < 1 {
+	if len(f.Streams) < 1 {
 		return errors.New("ffprobe: parsing streams error")
 	}
-	f.Resolution = f.streams[0]
+	f.Resolution = f.Streams[0]
 	return nil
 }
