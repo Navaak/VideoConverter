@@ -2,7 +2,7 @@ package app
 
 import (
 	"log"
-	"time"
+	"runtime"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -14,6 +14,7 @@ type application struct {
 func New(config Config) (*application, error) {
 	a := new(application)
 	a.config = config
+	runtime.GOMAXPROCS(a.config.MaxUseCPU)
 	return a, nil
 }
 
@@ -31,9 +32,7 @@ func (a *application) Run() error {
 			select {
 			case event := <-watcher.Events:
 				if event.Op == fsnotify.Create {
-					jobsCount++
-					println(event.Name, jobsCount)
-					time.Sleep(time.Second * 3)
+					a.newFile(event.Name)
 				}
 			case err := <-watcher.Errors:
 				log.Println("error:", err)

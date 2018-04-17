@@ -63,7 +63,7 @@ temp/
 *.old
 *.sql
 *.orig
-
+*.mp4
 
 tmp/
 done/
