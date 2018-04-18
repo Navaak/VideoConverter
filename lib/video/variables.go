@@ -1,5 +1,0 @@
-package video
-
-const ()
-
-var ()
