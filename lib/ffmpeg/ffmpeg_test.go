@@ -1,9 +1,8 @@
 package ffmpeg
 
 import (
+	"fmt"
 	"testing"
-
-	"github.com/gosuri/uiprogress"
 )
 
 func TestRun(t *testing.T) {
@@ -13,17 +12,6 @@ func TestRun(t *testing.T) {
 	}
 	v.SetWorkerCount(2)
 	v.Run()
-	p := v.Progress()
-	uiprogress.Start()
-	bar := uiprogress.AddBar(100)
-	bar.AppendCompleted()
-	bar.PrependElapsed()
-	last := 0
-	for ch := range p {
-		diff := int(ch) - last
-		for i := 0; i < diff; i++ {
-			bar.Incr()
-		}
-		last = int(ch)
-	}
+	v.ShowProgressBar()
+	fmt.Println(v.Logger())
 }

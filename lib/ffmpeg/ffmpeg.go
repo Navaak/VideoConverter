@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gosuri/uiprogress"
+
 	"navaak/convertor/lib/ffprobe"
 )
 
@@ -22,6 +24,7 @@ type Video struct {
 	details        *ffprobe.FileDetail
 	worker         int
 	exports        []*Export
+	done           chan bool
 	sourceDuration time.Duration
 }
 
@@ -54,6 +57,7 @@ func NewVideo(src, destDir string, scales ...string) (*Video, error) {
 }
 
 func (v *Video) Run() {
+	v.done = make(chan bool)
 	go func() {
 		if v.worker < 1 {
 			v.SetWorkerCount(2)
@@ -80,6 +84,22 @@ func (v *Video) Progress() chan float32 {
 	return p
 }
 
+func (v *Video) ShowProgressBar() {
+	p := v.Progress()
+	uiprogress.Start()
+	bar := uiprogress.AddBar(100)
+	bar.AppendCompleted()
+	bar.PrependElapsed()
+	last := 0
+	for ch := range p {
+		diff := int(ch) - last
+		for i := 0; i < diff; i++ {
+			bar.Incr()
+		}
+		last = int(ch)
+	}
+}
+
 func (v *Video) JobsCount() int {
 	return len(v.exports)
 }
@@ -90,10 +110,28 @@ func (v *Video) SetWorkerCount(n int) {
 
 func (v *Video) Wait() {
 	p := v.Progress()
-	<-p
+	for _ = range p {
+		// waiting block until channel close
+	}
 }
 
-func (v *Video) Logs() {
+func (v *Video) Logger() Log {
+	v.Wait()
+	log := Log{
+		SourceFile:       v.src,
+		SourceResolution: v.details.Resolution,
+		Size:             v.details.Format.Size,
+	}
+	for _, e := range v.exports {
+		log.Exports = append(log.Exports, ExportLog{
+			DestFile:   e.dest,
+			Resolution: e.resolution,
+			ScaleTitle: e.scale,
+			Success:    e.done,
+			Error:      e.err,
+		})
+	}
+	return log
 }
 
 func (v *Video) calculateProgress(p chan float32) {

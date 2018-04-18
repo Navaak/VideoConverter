@@ -2,6 +2,8 @@ package app
 
 import (
 	"log"
+	"navaak/convertor/lib/ffmpeg"
+	"path/filepath"
 	"runtime"
 
 	"github.com/fsnotify/fsnotify"
@@ -27,12 +29,13 @@ func (a *application) Run() error {
 
 	done := make(chan bool)
 	go func() {
-		jobsCount := 0
 		for {
 			select {
 			case event := <-watcher.Events:
 				if event.Op == fsnotify.Create {
-					a.newFile(event.Name)
+					log.Println("new file detected -- >",
+						event.Name)
+					a.newVid(event.Name)
 				}
 			case err := <-watcher.Errors:
 				log.Println("error:", err)
@@ -47,8 +50,20 @@ func (a *application) Run() error {
 	return nil
 }
 
-func (a *application) newFile(f string) chan bool {
-	done := make(chan bool)
-
-	return done
+func (a *application) newVid(f string) {
+	if filepath.Ext(f) != ".mp4" {
+		return
+	}
+	v, err := ffmpeg.NewVideo(f, a.config.DonePath,
+		ffmpeg.P1080,
+		ffmpeg.P720,
+		ffmpeg.P360,
+		ffmpeg.P480,
+		ffmpeg.P240)
+	if err != nil {
+		log.Fatal(err)
+	}
+	v.SetWorkerCount(a.config.MaxUseCPU)
+	v.Run()
+	v.Wait()
 }
