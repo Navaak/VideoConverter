@@ -8,8 +8,8 @@ var DefaultConfig = Config{
 }
 
 type Config struct {
-	WatchPath string `json:"watch_path`
+	WatchPath string `json:"watch_path"`
 	DonePath  string `json:"done_path"`
-	MaxUseCPU int    `json:"max_use_cpu`
+	MaxUseCPU int    `json:"max_use_cpu"`
 	LogPath   string `json:"log_path"`
 }

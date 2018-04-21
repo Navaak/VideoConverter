@@ -46,7 +46,12 @@ func (a *application) Run() error {
 			}
 		}
 	}()
-	watcher.Add(a.config.WatchPath)
+	watchpath, err := filepath.Abs(a.config.WatchPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	println("watching path selected to ---> ", watchpath)
+	watcher.Add(watchpath)
 	if err != nil {
 		return err
 	}
