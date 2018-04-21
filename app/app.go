@@ -2,21 +2,25 @@ package app
 
 import (
 	"log"
-	"navaak/convertor/lib/ffmpeg"
 	"path/filepath"
 	"runtime"
 
 	"github.com/fsnotify/fsnotify"
+
+	"navaak/convertor/lib/ffmpeg"
+	"navaak/convertor/lib/logger"
 )
 
 type application struct {
 	config Config
+	logger *logger.Logger
 }
 
 func New(config Config) (*application, error) {
 	a := new(application)
 	a.config = config
 	runtime.GOMAXPROCS(a.config.MaxUseCPU)
+	a.logger = logger.New(a.config.LogPath)
 	return a, nil
 }
 
@@ -61,9 +65,10 @@ func (a *application) newVid(f string) {
 		ffmpeg.P480,
 		ffmpeg.P240)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 	v.SetWorkerCount(a.config.MaxUseCPU)
 	v.Run()
-	v.Wait()
+	loggs := v.Logger()
+	a.logger.Log(filepath.Base(f), loggs)
 }

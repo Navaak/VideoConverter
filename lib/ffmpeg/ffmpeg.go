@@ -110,8 +110,13 @@ func (v *Video) SetWorkerCount(n int) {
 
 func (v *Video) Wait() {
 	p := v.Progress()
-	for _ = range p {
+	for ch := range p {
 		// waiting block until channel close
+		pr := int(ch)
+		if pr%20 == 0 && pr != 0 {
+			print(pr, "%")
+		}
+		print(".")
 	}
 }
 

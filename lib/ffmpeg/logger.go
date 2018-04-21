@@ -1,18 +1,26 @@
 package ffmpeg
 
-import "navaak/convertor/lib/ffprobe"
+import (
+	"encoding/json"
+	"navaak/convertor/lib/ffprobe"
+)
 
 type ExportLog struct {
-	DestFile   string
-	Resolution ffprobe.Resolution
-	Success    bool
-	ScaleTitle string
-	Error      error
+	DestFile   string             `json:"dest_file"`
+	Resolution ffprobe.Resolution `json:"resolution"`
+	Success    bool               `json:"success"`
+	ScaleTitle string             `json:"scale_title"`
+	Error      error              `json:"error"`
 }
 
 type Log struct {
-	SourceFile       string
-	SourceResolution ffprobe.Resolution
-	Exports          []ExportLog
-	Size             string
+	SourceFile       string             `json:"source_file"`
+	SourceResolution ffprobe.Resolution `json:"source_resolution"`
+	Exports          []ExportLog        `json:"exports"`
+	Size             string             `json:"size"`
+}
+
+func (l *Log) JSON() []byte {
+	d, _ := json.Marshal(l)
+	return d
 }
