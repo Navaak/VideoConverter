@@ -17,7 +17,8 @@ type Log struct {
 	SourceFile       string             `json:"source_file"`
 	SourceResolution ffprobe.Resolution `json:"source_resolution"`
 	Exports          []ExportLog        `json:"exports"`
-	Size             string             `json:"size"`
+	Size             int                `json:"size"`
+	Duration         int                `json:"duration"`
 }
 
 func (l *Log) JSON() []byte {

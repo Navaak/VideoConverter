@@ -17,18 +17,19 @@ import (
 	"navaak/convertor/lib/ffprobe"
 )
 
+// Video caching reference for convertor jobs
 type Video struct {
 	src            string
 	destDir        string
 	scales         []string
 	details        *ffprobe.FileDetail
 	worker         int
-	exports        []*Export
+	exports        []*export
 	done           chan bool
 	sourceDuration time.Duration
 }
 
-type Export struct {
+type export struct {
 	dest           string
 	resolution     ffprobe.Resolution
 	err            error
@@ -38,6 +39,7 @@ type Export struct {
 	done           bool
 }
 
+// New Video instant
 func NewVideo(src, destDir string, scales ...string) (*Video, error) {
 	details, err := ffprobe.GetDetail(src)
 	if err != nil {
@@ -56,6 +58,7 @@ func NewVideo(src, destDir string, scales ...string) (*Video, error) {
 	return v, nil
 }
 
+// Run convertor scaling video
 func (v *Video) Run() {
 	v.done = make(chan bool)
 	go func() {
@@ -122,10 +125,12 @@ func (v *Video) Wait() {
 
 func (v *Video) Logger() Log {
 	v.Wait()
+	size, _ := strconv.Atoi(v.details.Format.Size)
 	log := Log{
 		SourceFile:       v.src,
 		SourceResolution: v.details.Resolution,
-		Size:             v.details.Format.Size,
+		Size:             size,
+		Duration:         int(v.sourceDuration.Seconds()),
 	}
 	for _, e := range v.exports {
 		log.Exports = append(log.Exports, ExportLog{
@@ -177,7 +182,7 @@ func (v *Video) newExp(scale string) error {
 		resolution.Width > v.details.Resolution.Width {
 		return nil
 	}
-	e := new(Export)
+	e := new(export)
 	e.dest = dest
 	e.resolution = resolution
 	e.scale = scale
@@ -186,7 +191,7 @@ func (v *Video) newExp(scale string) error {
 	return nil
 }
 
-func (v *Video) exec(e *Export, job *sync.WaitGroup) {
+func (v *Video) exec(e *export, job *sync.WaitGroup) {
 	defer job.Done()
 	scale := fmt.Sprintf("scale=%d:%d",
 		e.resolution.Width, e.resolution.Height)
@@ -219,8 +224,7 @@ func (v *Video) exec(e *Export, job *sync.WaitGroup) {
 
 func (v *Video) makeFilepath(scale string) (string, error) {
 	base := filepath.Base(v.src)
-	ex := filepath.Ext(v.src)
-	splits := strings.Split(base, ex)
+	splits := strings.Split(base, ".")
 	if len(splits) < 2 {
 		return "", errors.New("error source file path")
 	}
@@ -230,7 +234,7 @@ func (v *Video) makeFilepath(scale string) (string, error) {
 	return path, nil
 }
 
-func (e *Export) readout(r io.Reader) {
+func (e *export) readout(r io.Reader) {
 	buf := make([]byte, 1024, 1024)
 	counter := 0
 	for {
