@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"navaak/convertor/app"
 	"os"
 	"strconv"
@@ -30,6 +31,9 @@ func loadConfig() app.Config {
 	cpu, _ := strconv.Atoi(os.Getenv(env["max_use_cpu"]))
 	if cpu < 1 {
 		cpu = 1
+	}
+	if config.WatchPath == "" {
+		log.Fatal("$VC_WATCH could not be undefined")
 	}
 	config.MaxUseCPU = cpu
 	return config

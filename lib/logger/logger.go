@@ -20,9 +20,7 @@ type Logger struct {
 }
 
 func New(path string) *Logger {
-	if err := os.MkdirAll(path, 0777); err != nil {
-		log.Fatal(err)
-	}
+	os.MkdirAll(path, 0777)
 	return &Logger{
 		loggerPath:     path,
 		datetimeFormat: time.RFC822,
