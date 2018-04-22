@@ -19,6 +19,7 @@ type Log struct {
 	Exports          []ExportLog        `json:"exports"`
 	Size             int                `json:"size"`
 	Duration         int                `json:"duration"`
+	Errors           []error            `json:"errors`
 }
 
 func (l *Log) JSON() []byte {

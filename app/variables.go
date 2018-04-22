@@ -27,4 +27,12 @@ var (
 <param name="videoBitrate" value="3000000" valuetype="data"></param>
 <param name="audioBitrate" value="44100" valuetype="data"></param></video>`,
 	}
+
+	bitRate = map[int]int{
+		240:  300000,
+		360:  400000,
+		480:  500000,
+		720:  1500000,
+		1080: 3000000,
+	}
 )

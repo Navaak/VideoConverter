@@ -85,17 +85,20 @@ func (a *application) newVid(f string) {
 	v.SetWorkerCount(a.config.MaxUseCPU)
 	v.Run()
 	loggs := v.Logger()
-	go a.logger.Log(base, loggs)
 	name := strings.Split(base, ".")[0]
+	snapshotsPath := filepath.Join(a.config.SnapshotsPath, name)
+	os.MkdirAll(snapshotsPath, 0777)
+	v.Snapshots(snapshotsPath)
 	exportpath := filepath.Join(a.config.ExportPath, name)
 	os.MkdirAll(exportpath, 0777)
 	orgfile := filepath.Join(exportpath, base)
 	if err := file.Move(loggs.SourceFile, orgfile); err != nil {
 		log.Fatal(err)
 	}
-	for _, export := range loggs.Exports {
+	for i, export := range loggs.Exports {
 		base := filepath.Base(export.DestFile)
 		dest := filepath.Join(exportpath, base)
+		loggs.Exports[i].DestFile = dest
 		if err := file.Move(export.DestFile, dest); err != nil {
 			log.Fatal(err)
 		}
@@ -103,6 +106,7 @@ func (a *application) newVid(f string) {
 	descsfilename := filepath.Join(exportpath, name)
 	a.smil(descsfilename, loggs)
 	a.json(descsfilename, orgfile, loggs)
+	go a.logger.Log(base, loggs)
 }
 
 func (a *application) smil(dest string, logg ffmpeg.Log) {
@@ -122,9 +126,14 @@ func (a *application) smil(dest string, logg ffmpeg.Log) {
 func (a *application) json(dest, org string, logg ffmpeg.Log) {
 	dest = dest + ".json"
 	id := strings.Split(filepath.Base(org), ".")[0]
-	qualities := []int{}
+	qualities := []map[string]interface{}{}
 	for _, ex := range logg.Exports {
-		qualities = append(qualities, ex.Resolution.Height)
+		data := map[string]interface{}{
+			"quality": ex.Resolution.Height,
+			"size":    getFileSize(ex.DestFile),
+			"bitRate": bitRate[ex.Resolution.Height],
+		}
+		qualities = append(qualities, data)
 	}
 	res := map[string]interface{}{
 		"videoId":   id,
@@ -137,4 +146,17 @@ func (a *application) json(dest, org string, logg ffmpeg.Log) {
 	if err := ioutil.WriteFile(dest, data, 0777); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getFileSize(path string) int {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0
+	}
+	defer f.Close()
+	details, err := f.Stat()
+	if err != nil {
+		return 0
+	}
+	return int(details.Size())
 }

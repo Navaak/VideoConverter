@@ -27,6 +27,7 @@ type Video struct {
 	exports        []*export
 	done           chan bool
 	sourceDuration time.Duration
+	errs           []error
 }
 
 type export struct {
@@ -131,6 +132,7 @@ func (v *Video) Logger() Log {
 		SourceResolution: v.details.Resolution,
 		Size:             size,
 		Duration:         int(v.sourceDuration.Seconds()),
+		Errors:           v.errs,
 	}
 	for _, e := range v.exports {
 		log.Exports = append(log.Exports, ExportLog{
@@ -142,6 +144,16 @@ func (v *Video) Logger() Log {
 		})
 	}
 	return log
+}
+
+func (v *Video) Snapshots(path string) {
+	println("snapshoting on ", path)
+	cmd := exec.Command("ffmpeg", "-i",
+		v.src, "-f", "image2", "-bt", "20M",
+		"-vf", "fps=1/20", filepath.Join(path, "shot%02d.jpg"))
+	if err := cmd.Run(); err != nil {
+		v.errs = append(v.errs, errors.New("snapshot: "+err.Error()))
+	}
 }
 
 func (v *Video) calculateProgress(p chan float32) {
@@ -229,7 +241,7 @@ func (v *Video) makeFilepath(scale string) (string, error) {
 		return "", errors.New("error source file path")
 	}
 	name := splits[0]
-	filename := name + scalesPreExt[scale] + ext
+	filename := name + "." + scalesPreExt[scale] + ext
 	path := filepath.Join(v.destDir, filename)
 	return path, nil
 }
