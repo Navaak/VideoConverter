@@ -1,15 +1,18 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
-	"io/ioutil"
-	"log"
 	"navaak/convertor/app"
 	"os"
+	"strconv"
 )
 
-var configPath = flag.String("c", "config.json", "-c file/to/your/path.json")
+var env = map[string]string{
+	"watch_path":  "VC_WATCH",
+	"export_path": "VC_EXPORTS",
+	"work_path":   "VC_TMP",
+	"max_use_cpu": "VC_WORKER",
+	"log_path":    "VC_LOGS",
+}
 
 func main() {
 	config := loadConfig()
@@ -18,16 +21,16 @@ func main() {
 }
 
 func loadConfig() app.Config {
-	if _, err := os.Stat(*configPath); os.IsNotExist(err) {
-		return app.DefaultConfig
+	var config = app.Config{
+		WatchPath:  os.Getenv(env["watch_path"]),
+		WorkPath:   os.Getenv(env["work_path"]),
+		ExportPath: os.Getenv(env["export_path"]),
+		LogPath:    os.Getenv(env["log_path"]),
 	}
-	data, err := ioutil.ReadFile(*configPath)
-	if err != nil {
-		log.Fatal(err)
+	cpu, _ := strconv.Atoi(os.Getenv(env["max_use_cpu"]))
+	if cpu < 1 {
+		cpu = 1
 	}
-	var config app.Config
-	if err := json.Unmarshal(data, &config); err != nil {
-		log.Fatal(err)
-	}
+	config.MaxUseCPU = cpu
 	return config
 }

@@ -101,19 +101,19 @@ func (a *application) newVid(f string) {
 		}
 	}
 	descsfilename := filepath.Join(exportpath, name)
-	a.smail(descsfilename, loggs)
+	a.smil(descsfilename, loggs)
 	a.json(descsfilename, orgfile, loggs)
 }
 
-func (a *application) smail(dest string, logg ffmpeg.Log) {
-	dest = dest + ".smail"
-	res := smailHead
+func (a *application) smil(dest string, logg ffmpeg.Log) {
+	dest = dest + ".smil"
+	res := smilHead
 	for _, ex := range logg.Exports {
 		base := filepath.Base(ex.DestFile)
-		vid := fmt.Sprintf(smailQualities[ex.Resolution.Height], base)
+		vid := fmt.Sprintf(smilQualities[ex.Resolution.Height], base)
 		res += vid
 	}
-	res += smailFooter
+	res += smilFooter
 	if err := ioutil.WriteFile(dest, []byte(res), 0777); err != nil {
 		log.Fatal(err)
 	}
