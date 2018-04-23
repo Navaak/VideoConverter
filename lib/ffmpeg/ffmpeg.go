@@ -150,7 +150,8 @@ func (v *Video) Snapshots(path string) {
 	println("snapshoting on ", path)
 	cmd := exec.Command("ffmpeg", "-i",
 		v.src, "-f", "image2", "-bt", "20M",
-		"-vf", "fps=1/20", filepath.Join(path, "shot%02d.jpg"))
+		"-vf", "fps=1/20", filepath.Join(path,
+			"shot%02d.jpg"))
 	if err := cmd.Run(); err != nil {
 		v.errs = append(v.errs, errors.New("snapshot: "+err.Error()))
 	}

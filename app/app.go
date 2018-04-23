@@ -86,7 +86,8 @@ func (a *application) newVid(f string) {
 	v.Run()
 	loggs := v.Logger()
 	name := strings.Split(base, ".")[0]
-	snapshotsPath := filepath.Join(a.config.SnapshotsPath, name)
+	snapshotsPath := filepath.Join(a.config.SnapshotsPath, name,
+		"snapshots")
 	os.MkdirAll(snapshotsPath, 0777)
 	v.Snapshots(snapshotsPath)
 	exportpath := filepath.Join(a.config.ExportPath, name)
