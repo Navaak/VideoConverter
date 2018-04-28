@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -153,7 +154,8 @@ func (v *Video) Snapshots(path string) {
 		"-vf", "fps=1/20", filepath.Join(path,
 			"shot%02d.jpg"))
 	if err := cmd.Run(); err != nil {
-		v.errs = append(v.errs, errors.New("snapshot: "+err.Error()))
+		errMsg := err.Error() + " on running command : " + cmd.Args[0]
+		v.errs = append(v.errs, errors.New("snapshot: "+errMsg))
 	}
 }
 
@@ -227,9 +229,8 @@ func (v *Video) exec(e *export, job *sync.WaitGroup) {
 	go func() {
 		e.readout(stdout)
 	}()
-
 	if err := cmd.Wait(); err != nil {
-		e.err = err
+		e.err = errors.New(err.Error() + " on running command : " + cmd.Args[0])
 		return
 	}
 	e.done = true
@@ -298,4 +299,15 @@ func parseDurationFromReader(s string) time.Duration {
 func strDurationToTime(s string) time.Duration {
 	n, _ := strconv.ParseFloat(s, 32)
 	return time.Duration(int(time.Second) * int(n))
+}
+
+func testRun() error {
+	cmd := exec.Command("ffmpeg", "-version")
+	return cmd.Run()
+}
+
+func init() {
+	if err := testRun(); err != nil {
+		log.Fatal("ffmpeg is missing could not execute")
+	}
 }

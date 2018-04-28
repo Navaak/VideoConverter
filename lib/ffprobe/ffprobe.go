@@ -3,6 +3,7 @@ package ffprobe
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"os/exec"
 )
 
@@ -47,4 +48,15 @@ func (f *FileDetail) parse() error {
 	}
 	f.Resolution = f.Streams[0]
 	return nil
+}
+
+func testRun() error {
+	cmd := exec.Command("ffprobe", "-version")
+	return cmd.Run()
+}
+
+func init() {
+	if err := testRun(); err != nil {
+		log.Fatal("ffprobe is missing could not execute")
+	}
 }

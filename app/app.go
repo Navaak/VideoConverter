@@ -70,6 +70,7 @@ func (a *application) newVid(f string) {
 		return
 	}
 	base := filepath.Base(f)
+	os.MkdirAll(a.config.WorkPath, 0777)
 	v, err := ffmpeg.NewVideo(f, a.config.WorkPath,
 		ffmpeg.P1080,
 		ffmpeg.P720,
