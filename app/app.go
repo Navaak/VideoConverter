@@ -6,10 +6,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -42,15 +42,12 @@ func (a *application) Run() error {
 	go func() {
 		for {
 
-			timer := time.NewTimer(time.Second)
 			select {
-			case <-timer.C:
-				time.Sleep(time.Second)
 			case event := <-watcher.Events:
 				if event.Op == fsnotify.Create {
 					log.Println("new file detected -- >",
 						event.Name)
-
+					syncFile(event.Name)
 					a.newVid(event.Name)
 				}
 			case err := <-watcher.Errors:
@@ -168,4 +165,9 @@ func getFileSize(path string) int {
 		return 0
 	}
 	return int(details.Size())
+}
+
+func syncFile(path string) {
+	cmd := exec.Command("sync", "-d", path)
+	cmd.Run()
 }
