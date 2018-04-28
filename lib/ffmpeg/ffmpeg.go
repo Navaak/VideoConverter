@@ -193,8 +193,9 @@ func (v *Video) newExp(scale string) error {
 	if err != nil {
 		return err
 	}
-	if resolution.Height > v.details.Resolution.Height ||
-		resolution.Width > v.details.Resolution.Width {
+	if (resolution.Height > v.details.Resolution.Height ||
+		resolution.Width > v.details.Resolution.Width) &&
+		scale != P240 {
 		return nil
 	}
 	e := new(export)
