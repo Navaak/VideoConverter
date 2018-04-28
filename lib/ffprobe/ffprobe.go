@@ -31,12 +31,12 @@ func GetDetail(path string) (*FileDetail, error) {
 	out, err := cmd.Output()
 	command := cmd.Args[0]
 	if err != nil {
-		err = errors.New(err.Error() + "on get execute : " + arg)
+		err = errors.New(err.Error() + "on get execute : " + command)
 		return nil, err
 	}
 	f := new(FileDetail)
 	if err := json.Unmarshal(out, f); err != nil {
-		err = errors.New(err.Error() + "on get marshal out put : " + arg)
+		err = errors.New(err.Error() + "on get marshal out put : " + command)
 		return nil, err
 	}
 	if err := f.parse(); err != nil {
