@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"navaak/convertor/app"
 	"os"
 	"strconv"
+	"time"
 )
 
 var env = map[string]string{
@@ -18,6 +21,11 @@ var env = map[string]string{
 
 func main() {
 	config := loadConfig()
+	cdata, _ := json.Marshal(&config)
+	println("service stating with :")
+	fmt.Println(cdata)
+	println()
+	time.Sleep(time.Second)
 	a, _ := app.New(config)
 	a.Run()
 }

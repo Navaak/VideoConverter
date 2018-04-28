@@ -222,7 +222,7 @@ func (v *Video) exec(e *export, job *sync.WaitGroup) {
 		e.dest)
 	stdout, err := cmd.StderrPipe()
 	if err != nil {
-		e.err = err
+		e.err = errors.New(err.Error() + " on getting output command : " + cmd.Args[0])
 		return
 	}
 	cmd.Start()
