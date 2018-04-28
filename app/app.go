@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -45,6 +46,7 @@ func (a *application) Run() error {
 				if event.Op == fsnotify.Create {
 					log.Println("new file detected -- >",
 						event.Name)
+					time.Sleep(time.Second)
 					a.newVid(event.Name)
 				}
 			case err := <-watcher.Errors:

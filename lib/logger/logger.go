@@ -23,7 +23,7 @@ func New(path string) *Logger {
 	os.MkdirAll(path, 0777)
 	return &Logger{
 		loggerPath:     path,
-		datetimeFormat: time.RFC822,
+		datetimeFormat: time.RFC3339Nano,
 	}
 }
 
