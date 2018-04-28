@@ -23,7 +23,7 @@ func main() {
 	config := loadConfig()
 	cdata, _ := json.Marshal(&config)
 	println("service stating with :")
-	fmt.Println(cdata)
+	fmt.Println(string(cdata))
 	println()
 	time.Sleep(time.Second)
 	a, _ := app.New(config)

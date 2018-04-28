@@ -220,9 +220,10 @@ func (v *Video) exec(e *export, job *sync.WaitGroup) {
 		"-bufsize", scalesBuffRates[e.scale],
 		"-profile:v", scalesProfiles[e.scale],
 		e.dest)
+	command := strings.Join(cmd.Args, " ")
 	stdout, err := cmd.StderrPipe()
 	if err != nil {
-		e.err = errors.New(err.Error() + " on getting output command : " + cmd.Args[0])
+		e.err = errors.New(err.Error() + " on getting output command : " + command)
 		return
 	}
 	cmd.Start()
@@ -230,7 +231,7 @@ func (v *Video) exec(e *export, job *sync.WaitGroup) {
 		e.readout(stdout)
 	}()
 	if err := cmd.Wait(); err != nil {
-		e.err = errors.New(err.Error() + " on running command : " + cmd.Args[0])
+		e.err = errors.New(err.Error() + " on running command : " + command)
 		return
 	}
 	e.done = true
