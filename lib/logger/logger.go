@@ -39,6 +39,21 @@ func (l *Logger) SetSupplementry(s map[string]interface{}) {
 	l.supplementaryConst = s
 }
 
+func (l *Logger) LogTo(path string, s interface{}) {
+	res := map[string]interface{}{}
+	res["data"] = s
+	for key, val := range l.supplementaryConst {
+		res[key] = val
+	}
+	res["datetime"] = time.Now().Format(l.datetimeFormat)
+	data, err := json.Marshal(&res)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := ioutil.WriteFile(path, data, 0777); err != nil {
+		log.Fatal(err)
+	}
+}
 func (l *Logger) Log(title string, s interface{}) {
 	res := map[string]interface{}{}
 	res["data"] = s

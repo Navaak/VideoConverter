@@ -111,14 +111,15 @@ func (a *application) newVid(f string) {
 			log.Fatal(err)
 		}
 	}
-	descsfilename := filepath.Join(exportpath, name)
-	a.smil(descsfilename, loggs)
-	a.json(descsfilename, orgfile, loggs)
-	go a.logger.Log(base, loggs)
+	destfilename := filepath.Join(exportpath, name)
+	a.smil(destfilename, loggs)
+	a.json(destfilename, orgfile, loggs)
+	logdest := destfilename + ".log.json"
+	go a.logger.LogTo(logdest, loggs)
 }
 
 func (a *application) smil(dest string, logg ffmpeg.Log) {
-	dest = dest + ".smil"
+	dest += ".smil"
 	res := smilHead
 	for _, ex := range logg.Exports {
 		base := filepath.Base(ex.DestFile)
