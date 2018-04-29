@@ -6,6 +6,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 type Resolution struct {
@@ -27,11 +28,20 @@ type FileDetail struct {
 }
 
 func GetDetail(path string) (*FileDetail, error) {
+	return getDetail(path, 1)
+}
+
+func getDetail(path string, try int) (*FileDetail, error) {
 	cmd := exec.Command("ffprobe", "-show_format", "-print_format", "json",
 		"-show_entries", "stream=width,height", path)
 	out, err := cmd.Output()
+	if err != nil && try < 3 {
+		time.Sleep(time.Second)
+		try++
+		return getDetail(path, try)
+	}
 	command := strings.Join(cmd.Args, " ")
-	if err != nil {
+	if err != nil && try > 3 {
 		err = errors.New(err.Error() + " on execute : " + command)
 		return nil, err
 	}

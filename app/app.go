@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -169,5 +170,8 @@ func getFileSize(path string) int {
 
 func syncFile(path string) {
 	cmd := exec.Command("sync", "-d", path)
-	cmd.Run()
+	if err := cmd.Run(); err != nil {
+		log.Println("syncing error")
+	}
+	time.Sleep(time.Second)
 }
