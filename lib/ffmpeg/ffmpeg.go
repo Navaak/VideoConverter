@@ -182,6 +182,7 @@ func (v *Video) calculateProgress(p chan float32) {
 		}
 		p <- progress
 	}
+	time.Sleep(time.Second * 2)
 }
 
 func (v *Video) newExp(scale string) error {

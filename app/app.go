@@ -101,6 +101,7 @@ func (a *application) newVid(f string) {
 	if err := file.Move(loggs.SourceFile, orgfile); err != nil {
 		log.Fatal(err)
 	}
+	syncFile("")
 	for i, export := range loggs.Exports {
 		base := filepath.Base(export.DestFile)
 		dest := filepath.Join(exportpath, base)
@@ -169,7 +170,12 @@ func getFileSize(path string) int {
 }
 
 func syncFile(path string) {
-	cmd := exec.Command("sync", "-d", path)
+	var cmd *exec.Cmd
+	if path != "" {
+		cmd = exec.Command("sync", "-d", path)
+	} else {
+		cmd = exec.Command("sync")
+	}
 	if err := cmd.Run(); err != nil {
 		log.Println("syncing error")
 	}
