@@ -225,14 +225,17 @@ func (v *Video) exec(e *export, job *sync.WaitGroup) {
 	stdout, err := cmd.StderrPipe()
 	if err != nil {
 		e.err = errors.New(err.Error() + " on getting output command : " + command)
+		println(e.err.Error())
 		return
 	}
+	println("command :  ", command, "   has executed successfully!")
 	cmd.Start()
 	go func() {
 		e.readout(stdout)
 	}()
 	if err := cmd.Wait(); err != nil {
 		e.err = errors.New(err.Error() + " on running command : " + command)
+		println(e.err.Error())
 		return
 	}
 	e.done = true
