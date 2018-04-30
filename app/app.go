@@ -2,9 +2,11 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -88,13 +90,17 @@ func (a *application) newVid(f string) {
 		return
 	}
 	v.SetWorkerCount(a.config.MaxUseCPU)
-	v.Run()
-	loggs := v.Logger()
 	name := strings.Split(base, ".")[0]
 	snapshotsPath := filepath.Join(a.config.SnapshotsPath, name,
 		"snapshots")
 	os.MkdirAll(snapshotsPath, 0777)
 	v.Snapshots(snapshotsPath)
+	hookerr := a.hookDone(name + "/snapshots")
+	v.Run()
+	loggs := v.Logger()
+	if hookerr != nil {
+		loggs.Errors = append(loggs.Errors, hookerr)
+	}
 	exportpath := filepath.Join(a.config.ExportPath, name)
 	os.MkdirAll(exportpath, 0777)
 	orgfile := filepath.Join(exportpath, base)
@@ -107,12 +113,16 @@ func (a *application) newVid(f string) {
 		dest := filepath.Join(exportpath, base)
 		loggs.Exports[i].DestFile = dest
 		if err := file.Move(export.DestFile, dest); err != nil {
-			log.Fatal(err)
+			loggs.Exports[i].Error = err
 		}
 	}
 	destfilename := filepath.Join(exportpath, name)
 	a.smil(destfilename, loggs)
 	a.json(destfilename, orgfile, loggs)
+	hookerr = a.hookDone(name)
+	if hookerr != nil {
+		loggs.Errors = append(loggs.Errors, hookerr)
+	}
 	logdest := destfilename + ".log.json"
 	go a.logger.LogTo(logdest, loggs)
 }
@@ -180,4 +190,26 @@ func syncFile(path string) {
 		log.Println("syncing error")
 	}
 	time.Sleep(time.Second)
+}
+
+func (a application) hookDone(path string) error {
+	url := filepath.Join(a.config.WebhookURL, path)
+	c := new(http.Client)
+	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(""))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("token", a.config.WebhookToken)
+	res, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode == 200 {
+		return nil
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	return errors.New(string(body))
 }
