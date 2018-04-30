@@ -197,19 +197,25 @@ func (a application) hookDone(path string) error {
 	c := new(http.Client)
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(""))
 	if err != nil {
+		println("request to ", path, "error!", err.Error())
 		return err
 	}
 	req.Header.Set("token", a.config.WebhookToken)
 	res, err := c.Do(req)
 	if err != nil {
+		println("request to ", path, "error! ", res.StatusCode, err.Error())
 		return err
 	}
 	if res.StatusCode == 200 {
+		println("request to ", path, "successfully")
 		return nil
 	}
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		println("request to ", path, "error! ", res.StatusCode, err.Error())
 		return err
 	}
-	return errors.New(string(body))
+	err = errors.New(string(body))
+	println("request to ", path, "error! ", res.StatusCode, err.Error())
+	return err
 }
