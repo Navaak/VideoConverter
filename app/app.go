@@ -193,7 +193,7 @@ func syncFile(path string) {
 }
 
 func (a application) hookDone(path string) error {
-	url := filepath.Join(a.config.WebhookURL, path)
+	url := a.config.WebhookURL + path
 	c := new(http.Client)
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(""))
 	if err != nil {
