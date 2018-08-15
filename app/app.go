@@ -107,7 +107,7 @@ func (a *application) newVid(f string) {
 	if err := file.Move(loggs.SourceFile, orgfile); err != nil {
 		log.Fatal(err)
 	}
-	syncFile("")
+	syncFile(exportpath)
 	for i, export := range loggs.Exports {
 		base := filepath.Base(export.DestFile)
 		dest := filepath.Join(exportpath, base)
