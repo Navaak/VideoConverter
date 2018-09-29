@@ -76,7 +76,9 @@ func (a *application) newVid(f string) {
 		return
 	}
 	base := filepath.Base(f)
-	os.MkdirAll(a.config.WorkPath, 0777)
+	if err := os.MkdirAll(a.config.WorkPath, 0777); err != nil {
+		println(a.config.WorkPath, err.Error(), "-----------------")
+	}
 	v, err := ffmpeg.NewVideo(f, a.config.WorkPath,
 		ffmpeg.P1080,
 		ffmpeg.P720,
@@ -105,7 +107,7 @@ func (a *application) newVid(f string) {
 	os.MkdirAll(exportpath, 0777)
 	orgfile := filepath.Join(exportpath, base)
 	if err := file.Move(loggs.SourceFile, orgfile); err != nil {
-		log.Fatal(err)
+		loggs.Errors = append(loggs.Errors, err)
 	}
 	syncFile(exportpath)
 	for i, export := range loggs.Exports {
@@ -137,7 +139,7 @@ func (a *application) smil(dest string, logg ffmpeg.Log) {
 	}
 	res += smilFooter
 	if err := ioutil.WriteFile(dest, []byte(res), 0777); err != nil {
-		log.Fatal(err)
+		logg.Errors = append(logg.Errors, err)
 	}
 }
 
@@ -162,7 +164,8 @@ func (a *application) json(dest, org string, logg ffmpeg.Log) {
 	}
 	data, _ := json.Marshal(&res)
 	if err := ioutil.WriteFile(dest, data, 0777); err != nil {
-		log.Fatal(err)
+		logg.Errors = append(logg.Errors, err)
+		// log.Fatal(err)
 	}
 }
 

@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gosuri/uiprogress"
@@ -63,24 +62,10 @@ func NewVideo(src, destDir string, scales ...string) (*Video, error) {
 // Run convertor scaling video
 func (v *Video) Run() {
 	v.done = make(chan bool)
-	go func() {
-		if v.worker < 1 {
-			v.SetWorkerCount(2)
-		}
-		var (
-			job            sync.WaitGroup
-			jobsDoingCount int
-		)
-		for _, export := range v.exports {
-			job.Add(1)
-			jobsDoingCount++
-			go v.exec(export, &job)
-			if jobsDoingCount >= v.worker {
-				job.Wait()
-				jobsDoingCount = 0
-			}
-		}
-	}()
+
+	for _, export := range v.exports {
+		v.exec(export)
+	}
 }
 
 func (v *Video) Progress() chan float32 {
@@ -207,8 +192,7 @@ func (v *Video) newExp(scale string) error {
 	return nil
 }
 
-func (v *Video) exec(e *export, job *sync.WaitGroup) {
-	defer job.Done()
+func (v *Video) exec(e *export) {
 	scale := fmt.Sprintf("scale=%d:%d",
 		e.resolution.Width, e.resolution.Height)
 	cmd := exec.Command("ffmpeg", "-y", "-i",
