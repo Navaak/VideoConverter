@@ -111,7 +111,6 @@ func (v *Video) Wait() {
 }
 
 func (v *Video) Logger() Log {
-	v.Wait()
 	size, _ := strconv.Atoi(v.details.Format.Size)
 	log := Log{
 		SourceFile:       v.src,
@@ -196,6 +195,7 @@ func (v *Video) exec(e *export) {
 	scale := fmt.Sprintf("scale=%d:%d",
 		e.resolution.Width, e.resolution.Height)
 	cmd := exec.Command("ffmpeg", "-y", "-i",
+		"-threads", "7",
 		v.src, "-vf", scale,
 		"-codec:v", "libx264",
 		"-preset", "slow",
