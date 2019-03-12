@@ -206,23 +206,11 @@ func (v *Video) exec(e *export) {
 		"-profile:v", scalesProfiles[e.scale],
 		e.dest)
 	command := strings.Join(cmd.Args, " ")
-	stdout, err := cmd.StderrPipe()
-	if err != nil {
-		e.err = errors.New(err.Error() + " on getting output command : " + command)
-		println(e.err.Error())
-		return
-	}
 	println("command :  ", command, "   has executed successfully!")
-	cmd.Start()
-	go func() {
-		e.readout(stdout)
-	}()
-	if err := cmd.Wait(); err != nil {
+	if err := cmd.Run(); err != nil {
 		e.err = errors.New(err.Error() + " on running command : " + command)
 		println(e.err.Error())
-		return
 	}
-	time.Sleep(time.Second)
 	e.done = true
 }
 
