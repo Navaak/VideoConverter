@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"navaak/convertor/app"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/asaskevich/govalidator"
 )
 
@@ -49,7 +49,8 @@ func loadConfig() app.Config {
 		cpu = 1
 	}
 	if _, err := govalidator.ValidateStruct(&config); err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
+		return app.DefaultConfig
 	}
 	config.MaxUseCPU = cpu
 	return config

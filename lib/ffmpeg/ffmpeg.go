@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gosuri/uiprogress"
+	"github.com/Sirupsen/logrus"
 
 	"navaak/convertor/lib/ffprobe"
 )
@@ -61,32 +61,8 @@ func NewVideo(src, destDir string, scales ...string) (*Video, error) {
 
 // Run convertor scaling video
 func (v *Video) Run() {
-	v.done = make(chan bool)
-
 	for _, export := range v.exports {
 		v.exec(export)
-	}
-}
-
-func (v *Video) Progress() chan float32 {
-	p := make(chan float32)
-	go v.calculateProgress(p)
-	return p
-}
-
-func (v *Video) ShowProgressBar() {
-	p := v.Progress()
-	uiprogress.Start()
-	bar := uiprogress.AddBar(100)
-	bar.AppendCompleted()
-	bar.PrependElapsed()
-	last := 0
-	for ch := range p {
-		diff := int(ch) - last
-		for i := 0; i < diff; i++ {
-			bar.Incr()
-		}
-		last = int(ch)
 	}
 }
 
@@ -97,19 +73,6 @@ func (v *Video) JobsCount() int {
 func (v *Video) SetWorkerCount(n int) {
 	v.worker = n
 }
-
-func (v *Video) Wait() {
-	p := v.Progress()
-	for ch := range p {
-		// waiting block until channel close
-		pr := int(ch)
-		if pr%20 == 0 && pr != 0 {
-			print(pr, "%")
-		}
-		print(".")
-	}
-}
-
 func (v *Video) Logger() Log {
 	size, _ := strconv.Atoi(v.details.Format.Size)
 	log := Log{
@@ -143,32 +106,6 @@ func (v *Video) Snapshots(path string) {
 	}
 }
 
-func (v *Video) calculateProgress(p chan float32) {
-	defer close(p)
-	for {
-		time.Sleep(time.Second)
-		var (
-			sum    float32
-			onWork float32
-		)
-
-		for _, ex := range v.exports {
-			if ex.err != nil {
-				continue
-			}
-			onWork++
-			sum += ex.progress
-		}
-		progress := sum / onWork
-		if progress >= 100 {
-			p <- 100
-			break
-		}
-		p <- progress
-	}
-	time.Sleep(time.Second * 2)
-}
-
 func (v *Video) newExp(scale string) error {
 	resolution, ok := scales[scale]
 	if !ok {
@@ -194,9 +131,10 @@ func (v *Video) newExp(scale string) error {
 func (v *Video) exec(e *export) {
 	scale := fmt.Sprintf("scale=%d:%d",
 		e.resolution.Width, e.resolution.Height)
-	cmd := exec.Command("ffmpeg", "-y", "-i",
+	cmd := exec.Command("ffmpeg", "-y",
+		"-i", v.src,
+		"-vf", scale,
 		"-threads", "7",
-		v.src, "-vf", scale,
 		"-codec:v", "libx264",
 		"-preset", "slow",
 		"-b:v", scalesBV[e.scale],
@@ -209,9 +147,8 @@ func (v *Video) exec(e *export) {
 	println("command :  ", command, "   has executed successfully!")
 	if err := cmd.Run(); err != nil {
 		e.err = errors.New(err.Error() + " on running command : " + command)
-		println(e.err.Error())
+		logrus.Error(e.err.Error())
 	}
-	e.done = true
 }
 
 func (v *Video) makeFilepath(scale string) (string, error) {

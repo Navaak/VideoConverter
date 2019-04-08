@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/fsnotify/fsnotify"
 
 	"navaak/convertor/lib/ffmpeg"
@@ -79,16 +80,20 @@ func (a *application) newVid(f string) {
 	if err := os.MkdirAll(a.config.WorkPath, 0777); err != nil {
 		println(a.config.WorkPath, err.Error(), "-----------------")
 	}
+	logrus.Info("make vid obj")
 	v, err := ffmpeg.NewVideo(f, a.config.WorkPath,
 		ffmpeg.P1080,
 		ffmpeg.P720,
 		ffmpeg.P480,
 		ffmpeg.P360,
 		ffmpeg.P240)
+
+	println("------------------")
 	if err != nil {
 		go a.logger.Log(base, map[string]string{
 			"error": err.Error(),
 		})
+		logrus.Error(err)
 		return
 	}
 	v.SetWorkerCount(a.config.MaxUseCPU)
@@ -96,6 +101,7 @@ func (a *application) newVid(f string) {
 	snapshotsPath := filepath.Join(a.config.SnapshotsPath, name,
 		"snapshots")
 	os.MkdirAll(snapshotsPath, 0777)
+	logrus.Info("make snapshots")
 	v.Snapshots(snapshotsPath)
 	hookerr := a.hookDone(name + "/snapshots")
 	v.Run()
